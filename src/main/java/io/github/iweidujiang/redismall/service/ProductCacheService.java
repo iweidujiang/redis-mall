@@ -20,6 +20,11 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * 商品详情的 Cache-Aside：先 Redis，没有再布隆，再互斥回源。改价先写库再删缓存。
+ *
+ * @author https://github.com/iweidujiang
+ */
 @Service
 public class ProductCacheService {
 

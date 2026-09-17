@@ -26,7 +26,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * 专门用来制造问题、对比修法。正式接口不要走这里。
+ * 场景演练接口，给前端按钮用。这里会故意打出错误路径，正式商品和下单不要走这里，也不限流。
+ *
+ * @author https://github.com/iweidujiang
  */
 @RestController
 @RequestMapping("/api/scenarios")

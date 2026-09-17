@@ -6,6 +6,7 @@ spring:
     name: redis-mall
   data:
     redis:
+      password: devRed1s
       host: 127.0.0.1
       port: 6379
       timeout: 3s

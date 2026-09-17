@@ -9,7 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 假装这是 MySQL。故意暴露命中次数，方便对比缓存击穿时数据库被打了几下。
+ * 内存商品表，用来模拟数据库。每次按 ID 查询会睡 30ms 并计数，方便对比击穿时打了几次库。
+ *
+ * @author https://github.com/iweidujiang
  */
 @Component
 public class ProductStore {

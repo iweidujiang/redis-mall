@@ -10,6 +10,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * 库存扣减。正式路径用 Lua；GET 再 SET 只留给超卖对比。下单入口另有一把按商品的锁。
+ *
+ * @author https://github.com/iweidujiang
+ */
 @Service
 public class StockService {
 

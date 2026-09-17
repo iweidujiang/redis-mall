@@ -1,5 +1,10 @@
 package io.github.iweidujiang.redismall.redis;
 
+/**
+ * Redis Key 命名集中在这里，避免各处手写字符串对不上。
+ *
+ * @author https://github.com/iweidujiang
+ */
 public final class RedisKeys {
 
     public static final String PRODUCT_BLOOM = "bf:product_id";

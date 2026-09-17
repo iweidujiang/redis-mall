@@ -8,13 +8,33 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
 
+/**
+ * 正式下单：先抢商品锁，再 Lua 扣库存。库存不足或抢不到锁直接拒绝。
+ *
+ * @author https://github.com/iweidujiang
+ */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
 
+    /**
+     * 下单入参。
+     *
+     * @param productId 商品 ID
+     * @param qty       购买数量
+     * @author https://github.com/iweidujiang
+     */
     public record PlaceOrderRequest(long productId, int qty) {
     }
 
+    /**
+     * 下单结果，带回扣完后的剩余库存。
+     *
+     * @param productId 商品 ID
+     * @param qty       购买数量
+     * @param stockLeft 剩余库存
+     * @author https://github.com/iweidujiang
+     */
     public record PlaceOrderResponse(long productId, int qty, long stockLeft) {
     }
 

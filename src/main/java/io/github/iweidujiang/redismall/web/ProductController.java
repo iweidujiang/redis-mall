@@ -16,6 +16,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 正式商品接口：列表、详情、改价、缓存元数据。走限流拦截器。
+ *
+ * @author https://github.com/iweidujiang
+ */
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {

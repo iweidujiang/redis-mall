@@ -9,6 +9,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * 拦截正式商品和下单接口。超配额返回 429，响应体与 {@link ApiResult} 一致。
+ *
+ * @author https://github.com/iweidujiang
+ */
 @Component
 public class RateLimitInterceptor implements HandlerInterceptor {
 

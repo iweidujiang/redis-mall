@@ -9,6 +9,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * 按 IP 做分钟级限流。INCR 和 EXPIRE 必须在同一段 Lua 里，拆开会留下永不过期的计数 Key。
+ *
+ * @author https://github.com/iweidujiang
+ */
 @Service
 public class RateLimitService {
 

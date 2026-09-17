@@ -5,6 +5,11 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+/**
+ * 把业务里抛出的非法参数收成 400，避免堆栈直接回给页面。
+ *
+ * @author https://github.com/iweidujiang
+ */
 @RestControllerAdvice
 public class RestExceptionHandler {
 

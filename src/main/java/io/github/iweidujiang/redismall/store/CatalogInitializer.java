@@ -11,6 +11,11 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * 启动时写入三个商品、对应库存，并尝试创建布隆过滤器。镜像没有 Bloom 时会退回空值缓存。
+ *
+ * @author https://github.com/iweidujiang
+ */
 @Component
 public class CatalogInitializer {
 
