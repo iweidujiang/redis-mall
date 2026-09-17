@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: redis-mall
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      timeout: 3s
+      lettuce:
+        pool:
+          enabled: true
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+          max-wait: 2s
+
+mall:
+  cache-ttl-seconds: 300
+  cache-ttl-jitter-seconds: 60
+  empty-ttl-seconds: 30
+  lock-seconds: 3
+  rate-limit-per-minute: 60

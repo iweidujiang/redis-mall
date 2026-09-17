@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redis Mall · 商品中心</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">RM</div>
+      <div>
+        <strong>Redis Mall</strong>
+        <span>商品中心</span>
+      </div>
+    </div>
+    <nav>
+      <button data-view="catalog" class="active">商品与缓存</button>
+      <button data-view="penetration">缓存穿透</button>
+      <button data-view="stampede">缓存击穿</button>
+      <button data-view="avalanche">缓存雪崩</button>
+      <button data-view="stock">库存超卖</button>
+      <button data-view="ratelimit">接口限流</button>
+      <button data-view="keys">大 Key / 热 Key</button>
+    </nav>
+    <div class="side-foot" id="bloomState">布隆过滤器：检测中</div>
+  </aside>
+
+  <main>
+    <header class="top">
+      <h1 id="title">商品与缓存</h1>
+      <p id="subtitle">Cache-Aside：读 Redis，没有再回源；改价先写库再删缓存。</p>
+    </header>
+
+    <section id="view-catalog" class="view">
+      <div class="toolbar">
+        <button class="primary" id="btnRefreshCatalog">刷新商品与 TTL</button>
+        <button id="btnResetHits">清零 DB 计数</button>
+        <span class="pill" id="dbHitsPill">DB 查询：-</span>
+      </div>
+      <div class="cards" id="productCards"></div>
+      <div class="panel">
+        <h3>改价</h3>
+        <p class="hint">先更新内存中的商品表，再删除 <code>product:{id}</code>。下一次读取会回源并带回新价格。</p>
+        <div class="row">
+          <select id="priceProduct"></select>
+          <input id="priceCents" type="number" value="3900" step="100">
+          <button class="primary" id="btnUpdatePrice">提交改价</button>
+        </div>
+        <pre class="log" id="catalogLog"></pre>
+      </div>
+    </section>
+
+    <section id="view-avalanche" class="view hidden">
+      <div class="split">
+        <div class="panel">
+          <h3>同一 TTL</h3>
+          <p class="hint">20 个 Key 都写成 30 秒。过期时刻挤在一起，回源会同时打到数据库。</p>
+          <button class="danger" id="btnAvalancheNaive">写入相同过期时间</button>
+          <div class="metric" id="avalancheNaive"></div>
+          <pre class="log" id="avalancheNaiveLog"></pre>
+        </div>
+        <div class="panel">
+          <h3>TTL 加随机</h3>
+          <p class="hint">20 个 Key 落在 300–360 秒。过期被打散，不会一起失效。</p>
+          <button class="primary" id="btnAvalancheJitter">写入随机过期时间</button>
+          <div class="metric" id="avalancheJitter"></div>
+          <pre class="log" id="avalancheJitterLog"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-stampede" class="view hidden">
+      <div class="split">
+        <div class="panel">
+          <h3>错误路径</h3>
+          <p class="hint">缓存 miss 后 20 个请求同时打数据库，也不缓存空值。</p>
+          <button class="danger" id="btnStampedeNaive">模拟击穿（无锁）</button>
+          <div class="metric" id="stampedeNaive"></div>
+        </div>
+        <div class="panel">
+          <h3>互斥回源</h3>
+          <p class="hint">先删缓存，20 个线程抢 <code>SET NX</code> 锁，只放一个人回源。</p>
+          <button class="primary" id="btnStampedeMutex">模拟击穿（有锁）</button>
+          <div class="metric" id="stampedeMutex"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-stock" class="view hidden">
+      <div class="split">
+        <div class="panel">
+          <h3>GET 再 SET</h3>
+          <p class="hint">库存 10，20 个线程各买 1 件。两个人看到同一个 1，就会超卖。</p>
+          <button class="danger" id="btnStockNaive">跑错误扣减</button>
+          <div class="metric" id="stockNaive"></div>
+        </div>
+        <div class="panel">
+          <h3>Lua 原子扣减</h3>
+          <p class="hint">判断和 DECRBY 在同一段脚本里，卖出数应等于 10。</p>
+          <button class="primary" id="btnStockLua">跑 Lua 扣减</button>
+          <div class="metric" id="stockLua"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>正式下单</h3>
+        <p class="hint">走 <code>POST /api/orders</code>：商品锁 + Lua。库存不足会直接拒绝。</p>
+        <div class="row">
+          <select id="orderProduct">
+            <option value="1001">1001 手机壳</option>
+            <option value="1002">1002 充电头</option>
+            <option value="1003">1003 数据线</option>
+          </select>
+          <input id="orderQty" type="number" min="1" value="1">
+          <button class="primary" id="btnOrder">下单</button>
+          <button id="btnResetStock">库存重置为 10</button>
+        </div>
+        <pre class="log" id="orderLog"></pre>
+      </div>
+    </section>
+
+    <section id="view-penetration" class="view hidden">
+      <div class="panel">
+        <h3>查一个不存在的商品</h3>
+        <p class="hint">真实目录只有 1001–1003。99999 应被布隆过滤器拦住，或写下 <code>__nil__</code> 短 TTL。</p>
+        <div class="row">
+          <input id="ghostId" type="number" value="99999">
+          <button class="primary" id="btnGhost">查询</button>
+        </div>
+        <pre class="log" id="ghostLog"></pre>
+      </div>
+    </section>
+
+    <section id="view-ratelimit" class="view hidden">
+      <div class="panel">
+        <h3>连续打详情接口</h3>
+        <p class="hint">正式接口每 IP 每分钟 60 次。下面会连发 70 次 <code>GET /api/products/1001</code>，观察 429。</p>
+        <button class="primary" id="btnBurst">连发 70 次</button>
+        <div class="metric" id="burstMetric"></div>
+        <pre class="log" id="burstLog"></pre>
+      </div>
+    </section>
+
+    <section id="view-keys" class="view hidden">
+      <div class="split">
+        <div class="panel">
+          <h3>大 Hash</h3>
+          <p class="hint">写入 2 万个 field。删除用 <code>UNLINK mall:big:hash</code>，不要 <code>DEL</code>。</p>
+          <button class="primary" id="btnBigKey">生成大 Key</button>
+          <pre class="log" id="bigLog"></pre>
+        </div>
+        <div class="panel">
+          <h3>热 Key</h3>
+          <p class="hint">连续读 500 次手机壳。Redis 8.6 用 <code>HOTKEYS START / GET / STOP</code> 看 <code>product:1001</code>。</p>
+          <button class="primary" id="btnHot">打热 500 次</button>
+          <pre class="log" id="hotLog"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="/js/app.js"></script>
+</body>
+</html>

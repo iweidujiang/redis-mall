@@ -1,0 +1,7 @@
+﻿services:
+  redis:
+    image: redis:8.6.2
+    container_name: redis-mall-cache
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
